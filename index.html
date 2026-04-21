@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zoox Job Requisition Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface-2: #f0efe9;
+      --border: rgba(0,0,0,0.1);
+      --border-mid: rgba(0,0,0,0.18);
+      --text: #1a1a18;
+      --text-2: #6b6b62;
+      --text-3: #9b9b90;
+      --accent: #1a1a18;
+      --accent-fg: #f5f4f0;
+      --success-bg: #e8f5e2;
+      --success-fg: #2d6a1f;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── Layout ── */
+    .app { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+
+    .form-col {
+      padding: 2.5rem 2rem 2.5rem 2.5rem;
+      overflow-y: auto;
+      max-height: 100vh;
+      border-right: 1px solid var(--border);
+    }
+
+    .preview-col {
+      padding: 2.5rem 2.5rem 2.5rem 2rem;
+      overflow-y: auto;
+      max-height: 100vh;
+      background: var(--bg);
+    }
+
+    /* ── Header ── */
+    .app-header { margin-bottom: 2rem; }
+    .app-logo { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.12em; color: var(--text-3); text-transform: uppercase; margin-bottom: 6px; }
+    .app-title { font-size: 22px; font-weight: 500; color: var(--text); line-height: 1.2; }
+
+    /* ── Form sections ── */
+    .form-section { margin-bottom: 1.25rem; }
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 10px;
+    }
+    .section-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.1rem 1.25rem;
+    }
+
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      margin-bottom: 5px;
+    }
+    .hint { font-size: 11px; color: var(--text-3); margin-bottom: 5px; }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 11px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+    }
+    input[type="text"]:focus, select:focus, textarea:focus {
+      border-color: var(--border-mid);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+      background: var(--surface);
+    }
+    textarea { resize: vertical; line-height: 1.65; }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 11px center;
+      padding-right: 30px;
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .level-row { display: flex; align-items: center; gap: 8px; }
+    .level-row input { flex: 1; }
+    .level-sep { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+
+    /* Panel grid */
+    .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .panel-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 11px;
+    }
+    .panel-box-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .panel-box input, .panel-box textarea { background: var(--surface); font-size: 13px; min-height: unset; resize: vertical; }
+
+    /* Label row with badge */
+    .label-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+    .label-row label { margin-bottom: 0; }
+    .autofill-badge {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      color: var(--success-fg);
+      background: var(--success-bg);
+      border-radius: 6px;
+      padding: 2px 7px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .autofill-badge.visible { opacity: 1; }
+
+    /* Buttons */
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
+    .btn {
+      padding: 10px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      border: 1px solid var(--border-mid);
+      background: var(--surface);
+      color: var(--text);
+    }
+    .btn:hover { opacity: 0.8; }
+    .btn:active { transform: scale(0.98); }
+    .btn-solid {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+    }
+
+    /* ── Preview column ── */
+    .preview-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--text-3);
+      text-align: center;
+    }
+    .preview-placeholder-icon {
+      width: 48px; height: 48px;
+      border: 1.5px dashed var(--border-mid);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .preview-placeholder p { font-size: 13px; line-height: 1.6; max-width: 200px; }
+
+    .jd-output { display: none; }
+    .jd-output.visible { display: block; }
+
+    .jd-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+    }
+    .jd-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 6px;
+    }
+    .jd-role-title { font-size: 20px; font-weight: 500; margin-bottom: 12px; line-height: 1.25; }
+    .jd-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+    .jd-tag {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 9px;
+      color: var(--text-2);
+    }
+    .jd-section { margin-bottom: 1.4rem; position: relative; }
+    .jd-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .jd-section-heading {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 0;
+    }
+    .section-copy-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--text-3);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .section-copy-btn:hover { color: var(--text-2); border-color: var(--border-mid); background: var(--surface-2); }
+    .section-copy-btn.copied { color: var(--success-fg); border-color: var(--success-fg); background: var(--success-bg); }
+    .jd-text {
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+    .jd-divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+    .panel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .panel-table td { padding: 4px 0; }
+    .panel-table td:first-child { color: var(--text-2); width: 130px; font-family: 'DM Mono', monospace; font-size: 11px; }
+
+    .copy-row { display: flex; gap: 8px; margin-top: 1.25rem; }
+    .copy-row .btn { flex: 1; font-size: 12px; padding: 8px 12px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      .app { grid-template-columns: 1fr; }
+      .form-col { max-height: none; border-right: none; border-bottom: 1px solid var(--border); padding: 1.5rem; }
+      .preview-col { max-height: none; padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── FORM COLUMN ── -->
+  <div class="form-col">
+    <div class="app-header">
+      <div class="app-logo">Zoox Recruiting</div>
+      <div class="app-title">Job Requisition Tool</div>
+    </div>
+
+    <!-- Position details -->
+    <div class="form-section">
+      <div class="section-label">Position details</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Job group</label>
+          <select id="job-group" onchange="handleGroupChange(this.value)">
+            <option value="" disabled selected>Select a group</option>
+            <option value="ops-ic">Product Software – Operational Tools IC</option>
+            <option value="ops-em">Product Software – Operational Tools EM</option>
+            <option value="maestro-ic">Product Software – Maestro IC</option>
+            <option value="maestro-em">Product Software – Maestro EM</option>
+            <option value="sre-ic">Product Software – Site Reliability Engineering IC</option>
+            <option value="sre-em">Product Software – Site Reliability Engineering EM</option>
+            <option value="qa-ic">Product Software – QA IC</option>
+            <option value="qa-em">Product Software – QA EM</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Job title</label>
+          <input type="text" id="job-title" placeholder="e.g. Senior Software Engineer, Operational Tools" />
+        </div>
+        <div class="field">
+          <div class="label-row">
+            <label>Job description intro</label>
+            <span id="intro-badge" class="autofill-badge">auto-filled</span>
+          </div>
+          <textarea id="job-intro" placeholder="Opening paragraph for the job description…" style="min-height:110px;"></textarea>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Hiring manager</label>
+            <input type="text" id="hiring-manager" placeholder="Full name" />
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <select id="location">
+              <option value="" disabled selected>Select location</option>
+              <option>Foster City, CA</option>
+              <option>San Diego, CA</option>
+              <option>Seattle, WA</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Job level range</label>
+          <div class="level-row">
+            <input type="text" id="level-from" placeholder="e.g. L3" />
+            <span class="level-sep">to</span>
+            <input type="text" id="level-to" placeholder="e.g. L5" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Special call out (form only) -->
+    <div class="form-section">
+      <div class="section-label">Special call out</div>
+      <div class="section-body">
+        <div class="field">
+          <textarea id="callout" placeholder="Internal notes, special requirements, must-haves…" style="min-height:75px;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role description -->
+    <div class="form-section">
+      <div class="section-label">Role description</div>
+      <div class="section-body">
+        <div class="field">
+          <div class="label-row">
+            <label>In this role you will</label>
+            <span id="role-badge" class="autofill-badge">auto-filled</span>
+          </div>
+          <textarea id="role-desc" placeholder="Day-to-day responsibilities…" style="min-height:120px;"></textarea>
+        </div>
+        <div class="field">
+          <div class="label-row">
+            <label>Qualifications</label>
+            <span id="qual-badge" class="autofill-badge">auto-filled</span>
+          </div>
+          <div class="hint">Max 4–5 bullet points</div>
+          <textarea id="qualifications" placeholder="Key qualifications…" style="min-height:120px;"></textarea>
+        </div>
+        <div class="field">
+          <div class="label-row">
+            <label>Bonus qualifications</label>
+            <span id="bonus-badge" class="autofill-badge">auto-filled</span>
+          </div>
+          <div class="hint">Max 3 bullet points</div>
+          <textarea id="bonus-qual" placeholder="Nice-to-have qualifications…" style="min-height:85px;"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interview panel -->
+    <div class="form-section">
+      <div class="section-label">Interview panel</div>
+      <div class="section-body">
+        <div class="panel-grid">
+          <div class="panel-box">
+            <div class="panel-box-label">Initial Interview</div>
+            <textarea id="panel-tp" placeholder="Name(s)" rows="2"></textarea>
+          </div>
+          <div class="panel-box">
+            <div class="panel-box-label">Language</div>
+            <textarea id="panel-lang" placeholder="Name(s)" rows="2"></textarea>
+          </div>
+          <div class="panel-box">
+            <div class="panel-box-label">Onsite panel</div>
+            <textarea id="panel-onsite" placeholder="Name(s)" rows="2"></textarea>
+          </div>
+          <div class="panel-box">
+            <div class="panel-box-label">Exec review</div>
+            <textarea id="panel-exec" placeholder="Name(s)" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="handlePreview()">Preview JD</button>
+      <button class="btn btn-solid" onclick="handleCopy()">Copy to clipboard</button>
+    </div>
+  </div>
+
+  <!-- ── PREVIEW COLUMN ── -->
+  <div class="preview-col" id="preview-col">
+
+    <div class="preview-placeholder" id="placeholder">
+      <div class="preview-placeholder-icon">◎</div>
+      <p>Fill in the form and click <strong>Preview JD</strong> to see the generated job description here.</p>
+    </div>
+
+    <div class="jd-output" id="jd-output">
+      <div class="jd-card">
+        <div class="jd-eyebrow">Job description</div>
+        <div class="jd-role-title" id="out-title"></div>
+        <div class="jd-tags" id="out-tags"></div>
+        <div id="out-body"></div>
+      </div>
+      <div class="copy-row">
+        <button class="btn" onclick="handleCopy()" id="copy-btn">Copy to clipboard</button>
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const COMP = `There are three major components to compensation for this position: salary, Amazon Restricted Stock Units (RSUs), and Zoox Stock Appreciation Rights. A sign-on bonus may be offered as part of the compensation package. The listed range applies only to the base salary. Compensation will vary based on geographic location and level. Leveling, as well as positioning within a level, is determined by a range of factors, including, but not limited to, a candidate's relevant years of experience, domain knowledge, and interview performance. The salary range listed in this posting is representative of the range of levels Zoox is considering for this position.\n\nZoox also offers a comprehensive package of benefits, including paid time off (e.g. sick leave, vacation, bereavement), unpaid time off, Zoox Stock Appreciation Rights, Amazon RSUs, health insurance, long-term care insurance, long-term and short-term disability insurance, and life insurance.`;
+
+  const ABOUT = `Zoox is developing the first ground-up, fully autonomous vehicle fleet and the supporting ecosystem required to bring this technology to market. Sitting at the intersection of robotics, machine learning, and design, Zoox aims to provide the next generation of mobility-as-a-service in urban environments. We're looking for top talent that shares our passion and wants to be part of a fast-moving and highly execution-oriented team.`;
+
+  const AUTOFILL = {
+    'ops-ic': {
+      intro: `The Operational Tools software team at Zoox is looking for a software engineer to build the tools that support our autonomous ride-sharing service. This team plays a key role in enabling the safe, reliable, and scalable operation of our autonomous fleet, making it a critical part of Zoox's mission to bring autonomous ride-hailing to the world.\n\nAs part of a collaborative team with diverse technical expertise, you'll work closely with product managers, designers, QA engineers, and remote operators to develop full-stack applications that support fleet monitoring, in-vehicle visualization, and real-time ride operations. Your work will directly contribute to the day-to-day operation and long-term improvement of our autonomous vehicle platform.\n\nIf you enjoy tackling innovative challenges, working across domains, and making a direct impact, this role is for you.`,
+      role: `• Design, build, and maintain full-stack applications that power Zoox's operational tools and autonomous ride-hailing platform\n• Develop scalable systems to monitor, support, and optimize a growing fleet of autonomous vehicles\n• Collaborate cross-functionally with product managers, designers, QA engineers, and remote operators to deliver high-impact solutions\n• Build backend systems to foster communication and manage data essential to operational workflows\n• Ensure system reliability and performance through testing, debugging, and continuous improvement of production systems`,
+      qualifications: `• Design, build, and maintain full-stack applications that power Zoox's operational tools and autonomous ride-hailing platform\n• Develop scalable systems to monitor, support, and optimize a growing fleet of autonomous vehicles\n• Collaborate cross-functionally with product managers, designers, QA engineers, and remote operators to deliver high-impact solutions\n• Build backend systems to foster communication and manage data essential to operational workflows\n• Ensure system reliability and performance through testing, debugging, and continuous improvement of production systems`,
+      bonus: `• Experience with Python or C++\n• Experience with 3D graphics, especially in a web context\n• Familiarity with robotics and 3D spatial reasoning`
+    },
+    'ops-em': {
+      intro: `Zoox is seeking an Engineering Manager to lead the team building the tools that power our autonomous ride-sharing service. The Rider Support Tools team plays a critical role in bringing Zoox's mission—delivering safe, seamless autonomous mobility to the world—to life.\n\nThis team develops the systems that enable the safe, efficient operation of our rapidly growing fleet of autonomous robotaxis and ensure exceptional rider experiences. As an Engineering Manager, you will partner closely with product managers, designers, QA engineers, and remote operators to deliver full-stack web applications that monitor and support the fleet at scale, power in-vehicle visualization systems, and enable real-time rider support.\n\nIf you're energized by solving novel, cross-domain challenges and want to lead work with clear, real-world impact on the future of transportation, this role is for you.`,
+      role: `• Lead a team of highly skilled engineers building large-scale web applications to support Zoox's autonomous robotaxi service\n• Partner cross-functionally with Product, Design, and Executive leadership to translate business objectives into a high-impact technical roadmap\n• Be the primary advocate for the team, grow its engineers, help resolve conflicts, and recognize people while fostering inclusivity, collaboration, and high morale\n• Strategically manage resources to enhance overall team efficiency, ensuring clear prioritization of feature delivery against technical stability\n• Provide technical support on important architectural decisions across frontend, backend, infrastructure, and AI investments\n• Mentor and guide junior engineers, perform code reviews, and promote engineering best practices`,
+      qualifications: `• Bachelor's degree in Computer Science or a related field and a minimum of 2 years of experience in Engineering Management\n• A minimum of 2 years of experience developing and maintaining full-stack web applications\n• Proficiency with modern front-end frameworks such as Vue, React, or Svelte\n• Experience working with AWS or comparable cloud infrastructure platforms\n• Strong communication skills with the ability to collaborate effectively across cross-functional teams`,
+      bonus: ``
+    },
+    'maestro-ic': {},
+    'maestro-em': {},
+    'sre-ic': {},
+    'sre-em': {},
+    'qa-ic': {},
+    'qa-em': {}
+  };
+
+  function flashBadge(id) {
+    const el = document.getElementById(id);
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2500);
+  }
+
+  function handleGroupChange(val) {
+    // Clear all fields first
+    ['job-title', 'job-intro', 'hiring-manager', 'level-from', 'level-to',
+     'callout', 'role-desc', 'qualifications', 'bonus-qual',
+     'panel-tp', 'panel-lang', 'panel-onsite', 'panel-exec'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('location').selectedIndex = 0;
+
+    // Hide the JD preview
+    document.getElementById('jd-output').classList.remove('visible');
+    document.getElementById('placeholder').style.display = '';
+
+    // Auto-fill if content exists for this group
+    const data = AUTOFILL[val];
+    if (data) {
+      document.getElementById('job-intro').value = data.intro || '';
+      document.getElementById('role-desc').value = data.role || '';
+      document.getElementById('qualifications').value = data.qualifications || '';
+      document.getElementById('bonus-qual').value = data.bonus || '';
+      ['intro-badge','role-badge','qual-badge','bonus-badge'].forEach(flashBadge);
+    }
+  }
+
+  function getData() {
+    const grpEl = document.getElementById('job-group');
+    return {
+      groupVal: grpEl.value,
+      groupText: grpEl.options[grpEl.selectedIndex]?.text || '',
+      jobTitle: document.getElementById('job-title').value.trim(),
+      jobIntro: document.getElementById('job-intro').value.trim(),
+      manager: document.getElementById('hiring-manager').value.trim(),
+      location: document.getElementById('location').value || '',
+      levelFrom: document.getElementById('level-from').value.trim(),
+      levelTo: document.getElementById('level-to').value.trim(),
+      roleDesc: document.getElementById('role-desc').value.trim(),
+      qual: document.getElementById('qualifications').value.trim(),
+      bonusQual: document.getElementById('bonus-qual').value.trim(),
+      tp: document.getElementById('panel-tp').value.trim(),
+      lang: document.getElementById('panel-lang').value.trim(),
+      onsite: document.getElementById('panel-onsite').value.trim(),
+      exec: document.getElementById('panel-exec').value.trim(),
+    };
+  }
+
+  function buildSections(d) {
+    const s = [];
+    if (d.jobIntro) s.push({ title: '', body: d.jobIntro });
+    if (d.roleDesc) s.push({ title: 'In this role you will', body: d.roleDesc });
+    if (d.qual) s.push({ title: 'Qualifications', body: d.qual });
+    if (d.bonusQual) s.push({ title: 'Bonus qualifications', body: d.bonusQual });
+    s.push({ title: 'Compensation', body: COMP });
+    s.push({ title: 'About Zoox', body: ABOUT });
+    return s;
+  }
+
+  function handlePreview() {
+    const d = getData();
+    if (!d.groupVal || !d.manager || !d.location) {
+      alert('Please fill in Job Group, Hiring Manager, and Location.');
+      return;
+    }
+
+    const roleName = d.groupText.replace('Product Software – ', '');
+    const titleDisplay = d.jobTitle || roleName + ' – Software Engineer';
+    document.getElementById('out-title').textContent = titleDisplay;
+
+    const tags = document.getElementById('out-tags');
+    tags.innerHTML = '';
+    const levelStr = (d.levelFrom || d.levelTo) ? `Level ${d.levelFrom}–${d.levelTo}` : '';
+    [d.location, levelStr, d.manager ? 'HM: ' + d.manager : ''].filter(Boolean).forEach(t => {
+      const el = document.createElement('span');
+      el.className = 'jd-tag';
+      el.textContent = t;
+      tags.appendChild(el);
+    });
+
+    const body = document.getElementById('out-body');
+    body.innerHTML = '';
+    buildSections(d).forEach((s, i, arr) => {
+      const div = document.createElement('div');
+      div.className = 'jd-section';
+
+      const header = document.createElement('div');
+      header.className = 'jd-section-header';
+
+      if (s.title) {
+        const h = document.createElement('div');
+        h.className = 'jd-section-heading';
+        h.textContent = s.title;
+        header.appendChild(h);
+      } else {
+        header.appendChild(document.createElement('div'));
+      }
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'section-copy-btn';
+      copyBtn.textContent = 'copy';
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(s.body).then(() => {
+          copyBtn.textContent = 'copied!';
+          copyBtn.classList.add('copied');
+          setTimeout(() => { copyBtn.textContent = 'copy'; copyBtn.classList.remove('copied'); }, 2000);
+        });
+      };
+      header.appendChild(copyBtn);
+      div.appendChild(header);
+
+      const p = document.createElement('div');
+      p.className = 'jd-text';
+      p.textContent = s.body;
+      div.appendChild(p);
+      body.appendChild(div);
+      if (i < arr.length - 1) {
+        const hr = document.createElement('hr');
+        hr.className = 'jd-divider';
+        body.appendChild(hr);
+      }
+    });
+
+    if (d.tp || d.lang || d.onsite || d.exec) {
+      const hr = document.createElement('hr'); hr.className = 'jd-divider'; body.appendChild(hr);
+      const div = document.createElement('div'); div.className = 'jd-section';
+
+      const header = document.createElement('div'); header.className = 'jd-section-header';
+      const h = document.createElement('div'); h.className = 'jd-section-heading'; h.textContent = 'Interview panel';
+      header.appendChild(h);
+
+      const panelText = [['Initial Interview', d.tp], ['Language', d.lang], ['Onsite panel', d.onsite], ['Exec review', d.exec]]
+        .filter(([, v]) => v).map(([l, v]) => `${l}: ${v}`).join('\n');
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'section-copy-btn';
+      copyBtn.textContent = 'copy';
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(panelText).then(() => {
+          copyBtn.textContent = 'copied!'; copyBtn.classList.add('copied');
+          setTimeout(() => { copyBtn.textContent = 'copy'; copyBtn.classList.remove('copied'); }, 2000);
+        });
+      };
+      header.appendChild(copyBtn);
+      div.appendChild(header);
+
+      const tbl = document.createElement('table'); tbl.className = 'panel-table';
+      [['Initial Interview', d.tp], ['Language', d.lang], ['Onsite panel', d.onsite], ['Exec review', d.exec]].forEach(([label, val]) => {
+        if (!val) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${label}</td><td>${val}</td>`;
+        tbl.appendChild(tr);
+      });
+      div.appendChild(tbl);
+      body.appendChild(div);
+    }
+
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('jd-output').classList.add('visible');
+  }
+
+  function handleCopy() {
+    const d = getData();
+    if (!d.groupVal) { alert('Please generate a preview first.'); return; }
+    const roleName = d.groupText.replace('Product Software – ', '');
+    const title = d.jobTitle || roleName + ' – Software Engineer';
+    let text = title + '\n\n';
+    buildSections(d).forEach(s => {
+      if (s.title) text += s.title.toUpperCase() + '\n';
+      text += s.body + '\n\n';
+    });
+    navigator.clipboard.writeText(text.trim()).then(() => {
+      ['copy-btn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy to clipboard', 2000); }
+      });
+    });
+  }
+</script>
+</body>
+</html>
